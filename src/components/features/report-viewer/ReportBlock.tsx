@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -26,7 +26,9 @@ export default function ReportBlock({ block, dragHandleLabel, onCommitText }: Re
     transition,
   };
 
-  useEffect(() => {
+  // contentEditable이라 React가 children을 관리하면 편집 내용을 덮어쓰므로 텍스트를 직접 주입한다.
+  // useEffect는 paint 이후에 실행돼 첫 프레임이 빈 상태로 보이므로 useLayoutEffect로 동기 주입.
+  useLayoutEffect(() => {
     if (textRef.current && textRef.current.textContent !== block.content) {
       textRef.current.textContent = block.content;
     }
