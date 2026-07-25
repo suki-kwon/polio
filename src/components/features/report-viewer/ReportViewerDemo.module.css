@@ -114,6 +114,9 @@
     box-shadow: none;
     background: #fff;
     color: #000;
-    forced-color-adjust: none;
+
+    /* 브라우저가 인쇄 시 배경/글자색을 임의로 걷어내지 않도록 고정. Safari는 아직 접두사 버전만 인식한다. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }

@@ -17,7 +17,8 @@ type ReportBlockProps = {
 };
 
 export default function ReportBlock({ block, dragHandleLabel, onCommitText }: ReportBlockProps) {
-  const { attributes, isDragging, listeners, setNodeRef, transform, transition } = useSortable({ id: block.id });
+  const { attributes, isDragging, listeners, setActivatorNodeRef, setNodeRef, transform, transition } =
+    useSortable({ id: block.id });
   const textRef = useRef<HTMLDivElement>(null);
 
   const style = {
@@ -34,6 +35,7 @@ export default function ReportBlock({ block, dragHandleLabel, onCommitText }: Re
   return (
     <div ref={setNodeRef} className={isDragging ? styles.dragging : styles.block} style={style}>
       <button
+        ref={setActivatorNodeRef}
         aria-label={dragHandleLabel}
         className={styles.dragHandle}
         type="button"

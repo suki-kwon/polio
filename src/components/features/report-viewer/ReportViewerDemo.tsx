@@ -1,6 +1,5 @@
 'use client';
 
-
 import {
   closestCenter,
   DndContext,
@@ -69,7 +68,11 @@ export default function ReportViewerDemo({ initialLocale }: ReportViewerDemoProp
           </button>
         </div>
       </div>
-      <div className={styles.documentSurface} dir={activeLocale === 'ar' ? 'rtl' : 'ltr'}>
+      <div
+        className={styles.documentSurface}
+        dir={activeLocale === 'ar' ? 'rtl' : 'ltr'}
+        lang={activeLocale}
+      >
         <DndContext collisionDetection={closestCenter} sensors={sensors} onDragEnd={handleDragEnd}>
           <SortableContext items={blocks.map((block) => block.id)} strategy={verticalListSortingStrategy}>
             {blocks.map((block) => (
