@@ -42,3 +42,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# claude code local settings
+.claude
+
+# 개인 학습 로그 — 사내 정보가 섞여 있어 public 레포에 커밋하지 않는다.
+# 실제 기록은 별도 private 레포(sukki-codes/dev-notes)에서 관리한다.
+notes/
