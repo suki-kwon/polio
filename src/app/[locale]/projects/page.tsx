@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { PROJECTS } from '@/content/projects';
 import { Link } from '@/i18n/navigation';
+import { buildPageMetadata } from '@/lib/metadata';
 
 import styles from './page.module.css';
 
@@ -14,10 +15,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'Projects' });
 
-  return {
+  return buildPageMetadata({
+    locale,
     title: t('metaTitle'),
     description: t('metaDescription'),
-  };
+    path: '/projects',
+  });
 }
 
 export default async function ProjectsPage({ params }: Props) {

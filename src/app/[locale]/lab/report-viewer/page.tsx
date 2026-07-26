@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { Link } from '@/i18n/navigation';
+import { buildPageMetadata } from '@/lib/metadata';
 import type { DemoLocale } from '@components/features/report-viewer/content';
 import ReportViewerLoader from '@components/features/report-viewer/ReportViewerLoader';
 
@@ -15,10 +16,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'Lab' });
 
-  return {
+  return buildPageMetadata({
+    locale,
     title: t('reportViewer.metaTitle'),
     description: t('reportViewer.metaDescription'),
-  };
+    path: '/lab/report-viewer',
+  });
 }
 
 export default async function ReportViewerPage({ params }: Props) {

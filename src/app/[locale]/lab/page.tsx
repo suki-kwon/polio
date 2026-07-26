@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { Link } from '@/i18n/navigation';
+import { buildPageMetadata } from '@/lib/metadata';
 
 import styles from './page.module.css';
 
@@ -20,10 +21,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'Lab' });
 
-  return {
+  return buildPageMetadata({
+    locale,
     title: t('metaTitle'),
     description: t('metaDescription'),
-  };
+    path: '/lab',
+  });
 }
 
 export default async function LabPage({ params }: Props) {
