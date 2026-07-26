@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { getProject, PROJECTS } from '@/content/projects';
 import { Link } from '@/i18n/navigation';
+import { buildPageMetadata } from '@/lib/metadata';
 
 import styles from './page.module.css';
 
@@ -25,10 +26,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const content = locale === 'ko' ? project.ko : project.en;
 
-  return {
+  return buildPageMetadata({
+    locale,
     title: content.title,
     description: content.tagline,
-  };
+    path: `/projects/${slug}`,
+  });
 }
 
 export default async function ProjectDetailPage({ params }: Props) {

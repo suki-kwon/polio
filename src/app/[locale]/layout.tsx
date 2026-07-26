@@ -8,6 +8,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ThemeProvider } from "next-themes";
 
 import { routing } from "@/i18n/routing";
+import { buildPageMetadata } from "@/lib/metadata";
+import { SITE_URL } from "@/lib/site";
 import Header from "@components/layout/Header";
 import "@styles/globals.css";
 
@@ -32,8 +34,15 @@ export async function generateMetadata({ params }: Pick<Props, "params">): Promi
   const t = await getTranslations({ locale, namespace: "Metadata" });
 
   return {
-    title: t("title"),
-    description: t("description"),
+    // og:image 등 파일 컨벤션이 만드는 URL을 절대 경로로 해석하기 위한 기준점.
+    // 하위 라우트는 이 값을 상속받으므로 루트 레이아웃에서만 지정한다.
+    metadataBase: new URL(SITE_URL),
+    ...buildPageMetadata({
+      locale,
+      title: t("title"),
+      description: t("description"),
+      path: "/",
+    }),
   };
 }
 

@@ -348,3 +348,33 @@
 - 브라우저 전용 Lab 데모에 대한 "dynamic import + `ssr:false`로 분리" 정책이 실제 코드로 처음 확립됨 — 이후 3D Playground(`@sukki/lab-3d-kit`, #69) 통합 시에도 동일 패턴(로더 컴포넌트 경유) 재사용 가능
 - `src/components/features/` 컨벤션(컴포넌트는 뷰, 상태/로직은 `src/hooks/`)이 처음으로 실제 코드에 반영되어, 향후 CodeRabbit 리뷰가 이 경로에 대해 참조할 실제 사례가 생김
 - ESLint 설정 수정으로 이후 어떤 코드든 함수 타입 시그니처에 이름 있는 파라미터를 자유롭게 쓸 수 있게 됨(이전엔 해당 패턴을 쓰는 순간 무조건 lint 에러였음)
+
+## 🎯 2026-07-26: 소셜 공유 메타데이터(Open Graph / Twitter)와 og:image 생성
+
+### Context
+
+- 루트 레이아웃의 `generateMetadata`가 `title`/`description`만 반환하고 있어, 링크를 공유해도 소셜 카드에 아무 정보가 뜨지 않는 상태였음(#57, PR #56 리뷰에서 분리된 이슈)
+- 사이트의 정식 URL을 아는 곳이 코드 어디에도 없었음 — `.env`도 없고 아직 배포도 되지 않은 상태. `og:image`는 절대 URL이어야 하므로 `metadataBase`의 기준값을 먼저 정해야 했음
+- Next.js 문서(`generate-metadata.md`의 "Merging")에 따르면 메타데이터 병합은 **얕은 병합**이라, 하위 페이지가 자기 `openGraph`를 정의하는 순간 부모의 `openGraph`가 통째로 교체됨. 이 규칙을 모른 채 루트에만 넣으면 `/about`을 공유해도 홈 제목이 뜨고, 페이지마다 넣으면 파일 컨벤션이 붙여주던 `og:image`가 사라짐 — 실제로 구현 도중 두 번째 현상을 빌드 산출물에서 확인함
+- `localePrefix: 'never'`(커밋 `2a18f86`) 정책상 로케일별 URL이 존재하지 않음
+
+### Decision
+
+- **`src/lib/` 신설** — 프레임워크 인접 헬퍼(뷰도 아니고 상태 로직도 아니라 `components/`·`hooks/` 어디에도 안 맞는 것들)의 자리로 사용
+  - `site.ts`: `NEXT_PUBLIC_SITE_URL` → `VERCEL_PROJECT_PRODUCTION_URL` → `localhost` 3단 폴백. 배포 단위로 바뀌는 `VERCEL_URL`을 쓰지 않은 이유는 og:image URL이 프리뷰마다 달라지면 소셜 플랫폼 캐시가 무의미해지기 때문
+  - `metadata.ts`: `buildPageMetadata()` — `title`/`description`을 받아 `openGraph`/`twitter`까지 펼쳐주는 헬퍼. 6개 페이지 전부 이걸 호출해 자기 `og:title`/`og:url`을 갖게 함
+  - `og-image.ts`: 이미지 alt/size/경로 상수. 생성 파일과 메타데이터 양쪽이 공유하되, 페이지들이 `next/og`를 끌고 오지 않도록 별도 모듈로 분리
+- **공유 필드를 변수로 빼는 패턴**: 얕은 병합 때문에 사라지는 `og:image`를 `OG_IMAGE` 상수로 만들어 모든 페이지의 `openGraph.images`/`twitter.images`에 다시 주입 — Next.js 문서가 "Overwriting fields" 절에서 권장하는 방식 그대로
+- **`opengraph-image.tsx` + `ImageResponse`**(정적 PNG 대신): 디자인 툴 없이 사이트 토큰(`#060816`/`#22d3ee`)을 그대로 재사용해 카드를 만들고, 카피가 바뀌어도 코드 수정으로 끝남
+  - **이미지 안의 문구는 영문 Hero 카피만 사용**: satori는 시스템 폰트를 못 쓰고 폰트 데이터를 임베드해야 해서, 한글을 넣으려면 한글 웹폰트를 레포에 커밋하거나 빌드 타임에 네트워크로 받아와야 함. 로케일 차이는 `og:title`/`og:description`이 이미 담당하므로 이미지까지 한글화할 이유가 없다고 판단
+  - `alt`는 파일 스코프 상수라 로케일 분기가 불가능(파일 컨벤션 제약)
+- **`opengraph-image.tsx`에 `generateStaticParams`를 따로 선언**: 이 파일은 레이아웃과 별개의 라우트 핸들러라 `layout.tsx`의 것을 상속받지 않음. 없는 상태로 빌드하면 이 라우트만 `ƒ`(동적)로 떨어지는 걸 빌드 로그에서 확인 → 선언 후 `●`(SSG)로 전환
+- **`src/messages/*.json`은 변경하지 않음**: `og:title`/`og:description`은 이미 로케일별로 존재하는 `Metadata.title`/`Metadata.description`을 그대로 쓰는 게 맞고, `og:site_name`("Polio")은 로케일 무관한 브랜드명이라 코드 상수가 적절. 같은 문구를 OG 전용으로 복제하면 나중에 한쪽만 수정되어 어긋남
+
+### Consequences
+
+- `/`, `/about`, `/lab`, `/lab/report-viewer`, `/projects`, `/projects/[slug]` 6개 라우트 × ko/en 모두 자기 제목·설명·URL과 og:image를 갖게 됨(빌드 산출물 HTML에서 직접 확인)
+- **`localePrefix: 'never'`의 한계가 표면화됨**: 로케일별 URL이 없어 소셜 크롤러는 언제나 기본 로케일(ko) 카드만 가져감. en 메타데이터는 코드상 정확히 생성되지만 크롤러에겐 도달 불가 — 라우팅 정책을 바꿔야 하는 문제라 이 작업 범위 밖으로 두고 별도 이슈로 분리
+- 같은 이유로 루트 페이지의 `og:image`는 파일 컨벤션이 만든 `/{locale}/opengraph-image?<hash>`가 되는데, 이 URL은 프록시가 프리픽스를 떼면서 307을 거쳐 200에 도달함(리다이렉트 체인까지 확인). 하위 페이지는 프리픽스 없는 `/opengraph-image`로 바로 200
+- `metadataBase`가 없으면 Next.js가 `localhost:3000`으로 폴백하므로, **배포 시 `NEXT_PUBLIC_SITE_URL` 설정이 필수**(Vercel이면 자동 폴백이 받아줌). 설정 전까지 소셜 카드는 동작하지 않음
+- 이슈의 Acceptance Criteria 중 "실제 소셜 디버거로 검증"은 공개 URL이 없어 수행 불가 — 배포 이후로 남김
