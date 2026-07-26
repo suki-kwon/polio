@@ -135,6 +135,9 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "node_modules/**",
+    // .gitignore에 있어도 ESLint 9 flat config는 .gitignore를 읽지 않는다.
+    // 특히 .claude/worktrees/ 안의 워크트리는 src/ 사본이라 통째로 다시 린트된다.
+    ".claude/**",
   ]),
 ]);
 
