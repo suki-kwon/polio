@@ -31,7 +31,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
     "eslint-import-resolver-typescript": "^4.4.5",
-    "eslint-plugin-perfectionist": "^5.10.0",
+    "eslint-plugin-perfectionist": "^5.11.0",
     "stylelint": "^17.14.1",
     "stylelint-config-standard": "^40.0.0",
     "typescript": "^6"
